@@ -362,7 +362,7 @@ func bind(pod *Pod, node Node) error {
 	binding := Binding{
 		ApiVersion: "v1",
 		Kind:       "Binding",
-		Metadata:   Metadata{Name: pod.Metadata.Name},
+		Metadata:   Metadata{Name: pod.Metadata.Name, Namespace: pod.Metadata.Namespace},
 		Target: Target{
 			ApiVersion: "v1",
 			Kind:       "Node",
