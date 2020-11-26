@@ -1,5 +1,7 @@
 # :japanese_castle: k8s-resource-scheduler - Simple Kubernetes Resource scheduler
 
+[![Docker Repository on Quay](https://quay.io/repository/mudler/k8s-resource-scheduler/status "Docker Repository on Quay")](https://quay.io/repository/mudler/k8s-resource-scheduler)
+
 Simple (experimental) CPU/Memory pod scheduler based from https://github.com/kelseyhightower/scheduler.
 
 The scheduler reads kubernetes metrics to determine nodes current CPU and Memory usage, and it tries to assign pods to nodes which are less busy.
