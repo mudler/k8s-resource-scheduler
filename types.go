@@ -26,6 +26,7 @@ type Event struct {
 	Reason         string          `json:"reason,omitempty"`
 	Source         EventSource     `json:"source,omitempty"`
 	Type           string          `json:"type,omitempty"`
+	Namespace      string          `json:"-"`
 }
 
 // EventSource contains information for an event.

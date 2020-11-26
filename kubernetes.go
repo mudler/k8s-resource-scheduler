@@ -30,8 +30,8 @@ import (
 
 var (
 	apiHost           = "127.0.0.1:8001"
-	bindingsEndpoint  = "/api/v1/namespaces/default/pods/%s/binding/"
-	eventsEndpoint    = "/api/v1/namespaces/default/events"
+	bindingsEndpoint  = "/api/v1/namespaces/%s/pods/%s/binding/"
+	eventsEndpoint    = "/api/v1/namespaces/%s/events"
 	nodesEndpoint     = "/api/v1/nodes"
 	podsEndpoint      = "/api/v1/pods"
 	watchPodsEndpoint = "/api/v1/watch/pods"
@@ -53,7 +53,7 @@ func postEvent(event Event) error {
 		Method:        http.MethodPost,
 		URL: &url.URL{
 			Host:   apiHost,
-			Path:   eventsEndpoint,
+			Path:   fmt.Sprintf(eventsEndpoint, event.Namespace),
 			Scheme: "http",
 		},
 	}
@@ -384,7 +384,7 @@ func bind(pod *Pod, node Node) error {
 		Method:        http.MethodPost,
 		URL: &url.URL{
 			Host:   apiHost,
-			Path:   fmt.Sprintf(bindingsEndpoint, pod.Metadata.Name),
+			Path:   fmt.Sprintf(bindingsEndpoint, pod.Metadata.Namespace, pod.Metadata.Name),
 			Scheme: "http",
 		},
 	}
@@ -403,6 +403,7 @@ func bind(pod *Pod, node Node) error {
 	message := fmt.Sprintf("Successfully assigned %s to %s", pod.Metadata.Name, node.Metadata.Name)
 	timestamp := time.Now().UTC().Format(time.RFC3339)
 	event := Event{
+		Namespace:      pod.Metadata.Namespace,
 		Count:          1,
 		Message:        message,
 		Metadata:       Metadata{GenerateName: pod.Metadata.Name + "-"},
