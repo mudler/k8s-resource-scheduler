@@ -410,11 +410,11 @@ func bind(pod *Pod, node Node) error {
 		LastTimestamp:  timestamp,
 		FirstTimestamp: timestamp,
 		Type:           "Normal",
-		Source:         EventSource{Component: "hightower-scheduler"},
+		Source:         EventSource{Component: schedulerName},
 		InvolvedObject: ObjectReference{
 			Kind:      "Pod",
 			Name:      pod.Metadata.Name,
-			Namespace: "default",
+			Namespace: pod.Metadata.Namespace,
 			Uid:       pod.Metadata.Uid,
 		},
 	}
