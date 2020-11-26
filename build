@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go build -a --ldflags '-extldflags "-static"' -tags netgo -installsuffix netgo .
+go build -o k8s-resource-scheduler -a --ldflags '-extldflags "-static"' -tags netgo -installsuffix netgo .
