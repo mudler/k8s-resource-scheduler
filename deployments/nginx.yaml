@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+      name: nginx
+      annotations:
+        k8s-resource-scheduler/cpu-bound: "true"
+    spec:
+      schedulerName: k8s-resource-scheduler
+      containers:
+        - name: nginx
+          image: "nginx:1.11.1-alpine"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "128M"

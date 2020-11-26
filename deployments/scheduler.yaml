@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-resource-scheduler
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-resource-scheduler
+  namespace: k8s-resource-scheduler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-resource-scheduler
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/binding
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "metrics.k8s.io"
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+---
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: k8s-resource-scheduler
+    subjects:
+    - kind: ServiceAccount
+      name: k8s-resource-scheduler
+      namespace: k8s-resource-scheduler
+    roleRef:
+      kind: ClusterRole
+      name: k8s-resource-scheduler
+      apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: scheduler
+  name: scheduler
+  namespace: k8s-resource-scheduler
+spec:
+  selector:
+    matchLabels:
+      app: scheduler
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: scheduler
+      name: scheduler
+    spec:
+      serviceAccountName: k8s-resource-scheduler
+      containers:
+        - name: scheduler
+          image: "quay.io/mudler/k8s-resource-scheduler:latest"
+          imagePullPolicy: Always
+          command: ["/usr/bin/scheduler"]
+        - name: proxy
+          image: "quay.io/mudler/k8s-resource-scheduler:latest"
+          imagePullPolicy: Always
+          command: ["/usr/bin/kubectl"]
+          args:
+            - "proxy"
