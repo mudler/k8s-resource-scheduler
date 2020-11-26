@@ -14,7 +14,7 @@ The scheduler reads kubernetes metrics to determine nodes current CPU and Memory
 
 ```bash
 
-$ kubectl apply -f deployments/scheduler.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/mudler/k8s-resource-scheduler/master/deployments/scheduler.yaml
 
 ```
 
