@@ -38,9 +38,10 @@ func memoryUnits(s string) (int, error) {
 	}
 	return usage, nil
 }
+
 func getPropertyBool(property string, m Metadata) bool {
-	prop, ok := m.Annotations[fmt.Sprintf("%s/%s", schedulerName, property)]
-	if !ok {
+	prop := getProperty(property, m)
+	if prop == "" {
 		prop = "false"
 	}
 
@@ -51,6 +52,15 @@ func getPropertyBool(property string, m Metadata) bool {
 	}
 
 	return false
+}
+
+func getProperty(property string, m Metadata) string {
+	prop, ok := m.Annotations[fmt.Sprintf("%s/%s", schedulerName, property)]
+	if !ok {
+		return ""
+	}
+
+	return prop
 }
 
 func bestNode(pod *Pod, nodes []Node) (Node, error) {

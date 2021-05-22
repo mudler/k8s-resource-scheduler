@@ -17,11 +17,13 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
 
 var processorLock = &sync.Mutex{}
+var lastAllocation *time.Time
 
 func reconcileUnscheduledPods(interval int, done chan struct{}, wg *sync.WaitGroup) {
 	for {
@@ -62,7 +64,50 @@ func monitorUnscheduledPods(done chan struct{}, wg *sync.WaitGroup) {
 	}
 }
 
+func getPropertyInt(property string, m Metadata) int {
+	prop := getProperty(property, m)
+	if prop == "" {
+		return 0
+	}
+
+	i, err := strconv.Atoi(prop)
+	if err != nil {
+		return 0
+	}
+	return i
+}
+
+func scheduleQueue(done chan struct{}, queue chan *Pod, wg *sync.WaitGroup) {
+	for {
+		select {
+		case pod := <-queue:
+			processorLock.Lock()
+			time.Sleep(2 * time.Second)
+			err := schedulePod(pod)
+			if err != nil {
+				log.Println(err)
+			}
+			processorLock.Unlock()
+		case <-done:
+			wg.Done()
+			log.Println("Stopped scheduler.")
+			return
+		}
+	}
+}
+
 func schedulePod(pod *Pod) error {
+	now := time.Now()
+
+	burstProtect := getPropertyInt("burst-protect", pod.Metadata)
+	if lastAllocation != nil && burstProtect != 0 {
+		diff := now.Sub(*lastAllocation)
+		if diff.Seconds() < float64(burstProtect) {
+			Queue <- pod
+			return fmt.Errorf("burst detected for pod '%s' - waiting (diff: %f burst: %f)", pod.Metadata.Name, diff.Seconds(), float64(burstProtect))
+		}
+	}
+
 	nodes, err := fit(pod)
 	if err != nil {
 		return err
@@ -78,6 +123,8 @@ func schedulePod(pod *Pod) error {
 	if err != nil {
 		return err
 	}
+
+	lastAllocation = &now
 	return nil
 }
 

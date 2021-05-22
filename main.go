@@ -25,14 +25,21 @@ import (
 
 const schedulerName = "k8s-resource-scheduler"
 
+var Queue chan *Pod
+
 func main() {
 	log.Println(fmt.Sprintf("Starting %s scheduler...", schedulerName))
 
 	doneChan := make(chan struct{})
+	Queue = make(chan *Pod, 1)
+
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go monitorUnscheduledPods(doneChan, &wg)
+
+	wg.Add(1)
+	go scheduleQueue(doneChan, Queue, &wg)
 
 	wg.Add(1)
 	go reconcileUnscheduledPods(30, doneChan, &wg)
