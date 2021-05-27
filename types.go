@@ -106,9 +106,15 @@ type Node struct {
 	NodeMetrics NodeMetrics `json:"-"`
 }
 
+type Condition struct {
+	Type   string `json:"type"`
+	Status string `json:"status"`
+}
+
 type NodeStatus struct {
 	Capacity    ResourceList `json:"capacity"`
 	Allocatable ResourceList `json:"allocatable"`
+	Conditions  []Condition  `json:"conditions"`
 }
 
 type ListMetadata struct {

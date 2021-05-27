@@ -94,8 +94,18 @@ func getNodes() (*NodeList, error) {
 	if err != nil {
 		return nodeList, err
 	}
-
+	result := &NodeList{ApiVersion: nodeList.ApiVersion, Kind: nodeList.Kind, Items: []*Node{}}
+NODE:
 	for _, n := range nodeList.Items {
+	COND:
+		for _, c := range n.Status.Conditions {
+			if c.Type == "Ready" && c.Status == "True" {
+				result.Items = append(result.Items, n)
+				log.Println("Node up", n.Metadata.Name)
+				break COND
+			}
+		}
+
 		log.Println("Gathering metrics for", fmt.Sprintf(metricsEndpoint, n.Metadata.Name))
 		var nm NodeMetrics
 		request := &http.Request{
@@ -111,25 +121,26 @@ func getNodes() (*NodeList, error) {
 
 		resp, err := http.DefaultClient.Do(request)
 		if err != nil {
-			return nodeList, err
+			log.Println("Failed getting metrics", err)
+			continue NODE
 		}
 
 		if resp.StatusCode != 200 {
 			b, _ := ioutil.ReadAll(resp.Body)
 			log.Println(string(b))
-			return nodeList, err
+			continue NODE
 		}
 
 		err = json.NewDecoder(resp.Body).Decode(&nm)
 		if err != nil {
-			return nodeList, err
+			log.Println("Failed getting metrics", err)
+			continue NODE
 		}
 
 		n.NodeMetrics = nm
 		log.Println("CPU/RAM Usage:", n.NodeMetrics.Usage.Cpu, n.NodeMetrics.Usage.Memory)
 	}
-
-	return nodeList, nil
+	return result, nil
 }
 
 func watchUnscheduledPods() (<-chan Pod, <-chan error) {
@@ -284,8 +295,10 @@ func fit(pod *Pod) ([]Node, error) {
 				if err != nil {
 					return nil, err
 				}
-				ru := resourceUsage[p.Spec.NodeName]
-				ru.CPU += cores
+				ru, exists := resourceUsage[p.Spec.NodeName]
+				if exists {
+					ru.CPU += cores
+				}
 			}
 		}
 	}
