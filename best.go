@@ -76,8 +76,16 @@ func bestNode(pod *Pod, nodes []Node) (Node, error) {
 		log.Println("Pod", pod.Metadata.Name, "is memory bound")
 	}
 
+NODES:
 	for i := range nodes {
 		currentNode := &nodes[i]
+
+		for l, v := range pod.Spec.NodeSelector {
+			if currentNode.Metadata.Labels[l] != v {
+				log.Println("Node", currentNode.Metadata.Name, "does not match selector", currentNode.Metadata.Labels)
+				continue NODES
+			}
+		}
 
 		nodeCPUBound := getPropertyBool("cpu-bound", currentNode.Metadata)
 		if nodeCPUBound {

@@ -65,8 +65,9 @@ type Pod struct {
 }
 
 type PodSpec struct {
-	NodeName   string      `json:"nodeName"`
-	Containers []Container `json:"containers"`
+	NodeName     string            `json:"nodeName"`
+	Containers   []Container       `json:"containers"`
+	NodeSelector map[string]string `json:"nodeSelector"`
 }
 
 type Container struct {
