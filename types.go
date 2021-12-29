@@ -65,9 +65,10 @@ type Pod struct {
 }
 
 type PodSpec struct {
-	NodeName     string            `json:"nodeName"`
-	Containers   []Container       `json:"containers"`
-	NodeSelector map[string]string `json:"nodeSelector"`
+	NodeName      string            `json:"nodeName"`
+	Containers    []Container       `json:"containers"`
+	NodeSelector  map[string]string `json:"nodeSelector"`
+	SchedulerName string            `json:"schedulerName"`
 }
 
 type Container struct {

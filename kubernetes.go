@@ -234,6 +234,40 @@ func getUnscheduledPods() ([]*Pod, error) {
 	return unscheduledPods, nil
 }
 
+func getRunningPods() (pods []Pod, err error) {
+	var podList PodList
+
+	v := url.Values{}
+	v.Add("fieldSelector", "status.phase=Running")
+
+	request := &http.Request{
+		Header: make(http.Header),
+		Method: http.MethodGet,
+		URL: &url.URL{
+			Host:     apiHost,
+			Path:     podsEndpoint,
+			RawQuery: v.Encode(),
+			Scheme:   "http",
+		},
+	}
+	request.Header.Set("Accept", "application/json, */*")
+
+	resp, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&podList)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range podList.Items {
+		if p.Spec.SchedulerName == schedulerName {
+			pods = append(pods, p)
+		}
+	}
+	return
+}
 func getPods() (*PodList, error) {
 	var podList PodList
 

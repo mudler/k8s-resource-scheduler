@@ -63,7 +63,7 @@ func getProperty(property string, m Metadata) string {
 	return prop
 }
 
-func bestNode(pod *Pod, nodes []Node) (Node, error) {
+func bestNode(pod *Pod, nodes []Node) (*Node, error) {
 	var bestNode *Node
 
 	podCPUBound := getPropertyBool("cpu-bound", pod.Metadata)
@@ -142,9 +142,5 @@ NODES:
 		}
 	}
 
-	if bestNode == nil {
-		return nodes[0], nil
-	}
-
-	return *bestNode, nil
+	return bestNode, nil
 }

@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -112,14 +113,51 @@ func schedulePod(pod *Pod) error {
 	if err != nil {
 		return err
 	}
+
+	if os.Getenv("MAX_PARALLEL_JOBS") != "" {
+		fmt.Println("Max parallel jobs defined")
+		threshold := 2
+
+		t, err := strconv.Atoi(os.Getenv("MAX_PARALLEL_JOBS"))
+		if err == nil {
+			threshold = t
+		}
+
+		pods, _ := getRunningPods()
+		runningJobs := map[string]int{}
+		for _, p := range pods {
+			runningJobs[p.Spec.NodeName]++
+		}
+		fmt.Println(runningJobs)
+
+		realNodes := []Node{}
+		for _, n := range nodes {
+			if runningJobs[n.Metadata.Name] < threshold {
+				realNodes = append(realNodes, n)
+			} else {
+				fmt.Println("Filtering", n.Metadata.Name, "Jobs running", runningJobs[n.Metadata.Name], "Threshold", threshold)
+			}
+		}
+
+		nodes = realNodes
+	}
+
 	if len(nodes) == 0 {
+		Queue <- pod
 		return fmt.Errorf("Unable to schedule pod (%s) failed to fit in any node", pod.Metadata.Name)
 	}
+
 	node, err := bestNode(pod, nodes)
 	if err != nil {
 		return err
 	}
-	err = bind(pod, node)
+
+	if node == nil {
+		Queue <- pod
+		return fmt.Errorf("no available node to fit pod %s", pod.Metadata.Name)
+	}
+
+	err = bind(pod, *node)
 	if err != nil {
 		return err
 	}
