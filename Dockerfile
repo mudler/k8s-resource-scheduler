@@ -10,5 +10,5 @@ RUN ./build
 FROM scratch
 MAINTAINER Ettore Di Giacinto <mudler@mocaccino.org>
 COPY --from=builder /scheduler/k8s-resource-scheduler /usr/bin/scheduler
-COPY --from=builder /kubernetes/client/bin/kubectl /usr/bin/kubectl
+COPY --from=builder /usr/bin/kubectl /usr/bin/kubectl
 ENTRYPOINT ["/usr/bin/scheduler"]
