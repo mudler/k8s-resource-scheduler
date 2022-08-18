@@ -1,10 +1,8 @@
-FROM quay.io/mocaccino/extra AS builder
-RUN luet install -y lang/go
-ARG KUBECTL_VERSION=v1.18.2
-ARG KUBECTL_ARCH=linux-$(uname -m)
-RUN wget -O kubectl.tar.gz https://dl.k8s.io/$KUBECTL_VERSION/kubernetes-client-$KUBECTL_ARCH.tar.gz && \
-    echo "$KUBECTL_CHECKSUM kubectl.tar.gz"  && \
-    tar xvf kubectl.tar.gz -C /
+FROM golang:1.18 AS builder
+RUN curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+RUN apt-get update
+RUN apt-get install -y kubectl
 WORKDIR /scheduler
 COPY . .
 RUN ./build
